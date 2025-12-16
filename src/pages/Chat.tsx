@@ -1,0 +1,114 @@
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Send, Wind } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ChatMessage, TypingIndicator } from '@/components/ChatMessage';
+import { useChat } from '@/hooks/useChat';
+
+const Chat = () => {
+  const navigate = useNavigate();
+  const { messages, sendMessage, isTyping } = useChat();
+  const [input, setInput] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim()) {
+      sendMessage(input.trim());
+      setInput('');
+    }
+  };
+
+  const quickReplies = [
+    "I'm feeling stressed",
+    "I need to talk",
+    "Help me relax",
+  ];
+
+  return (
+    <div className="min-h-screen flex flex-col pb-24 md:pt-20">
+      {/* Header */}
+      <header className="sticky top-0 md:top-16 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50 px-4 py-3">
+        <div className="container max-w-lg flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-bold text-foreground">Chat Support</h1>
+            <p className="text-xs text-muted-foreground">A safe space to share</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/calm')}
+            className="gap-2"
+          >
+            <Wind className="w-4 h-4" />
+            Calm Mode
+          </Button>
+        </div>
+      </header>
+
+      {/* Messages */}
+      <div className="flex-1 container max-w-lg px-4 py-4 overflow-y-auto">
+        <div className="space-y-4">
+          {messages.map(message => (
+            <ChatMessage key={message.id} message={message} />
+          ))}
+          {isTyping && <TypingIndicator />}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+      {/* Quick replies */}
+      {messages.length < 3 && (
+        <div className="container max-w-lg px-4 pb-2">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {quickReplies.map(reply => (
+              <Button
+                key={reply}
+                variant="outline"
+                size="sm"
+                onClick={() => sendMessage(reply)}
+                className="whitespace-nowrap text-xs"
+              >
+                {reply}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Input */}
+      <div className="sticky bottom-20 md:bottom-0 bg-background/80 backdrop-blur-xl border-t border-border/50 px-4 py-3">
+        <form onSubmit={handleSubmit} className="container max-w-lg">
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Share how you're feeling..."
+              className="flex-1 rounded-xl border-border/50 bg-card"
+              disabled={isTyping}
+            />
+            <Button
+              type="submit"
+              size="icon"
+              variant="calm"
+              disabled={!input.trim() || isTyping}
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default Chat;
