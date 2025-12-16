@@ -7,6 +7,19 @@ import { Button } from '@/components/ui/button';
 import { Wind, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
+const positiveAffirmations = {
+  happy: [
+    "Wonderful! Your positive energy is inspiring. Keep shining! ✨",
+    "That's beautiful! Savor this joyful moment. 🌟",
+    "Amazing! Your happiness matters. Enjoy this feeling! 💫",
+  ],
+  okay: [
+    "That's perfectly fine. Every day is a new beginning. 🌱",
+    "Being okay is enough. You're doing great! 💙",
+    "Steady and calm. That's a good place to be. 🌿",
+  ],
+};
+
 const Index = () => {
   const navigate = useNavigate();
   const { saveMood, getTodayMood, moods } = useMoodStorage();
@@ -27,7 +40,24 @@ const Index = () => {
   const handleMoodSave = (mood: MoodType, reflection?: string) => {
     saveMood(mood, reflection);
     setTodayMood(getTodayMood());
-    toast.success('Mood saved! Take care of yourself today 💙');
+
+    // Different behavior based on mood
+    if (mood === 'sad' || mood === 'stressed') {
+      // Navigate to chat with mood context
+      toast.info("Let's talk about how you're feeling...", {
+        duration: 2000,
+      });
+      setTimeout(() => {
+        navigate(`/chat?mood=${mood}`);
+      }, 500);
+    } else {
+      // Show positive affirmation for happy/okay
+      const affirmations = positiveAffirmations[mood as 'happy' | 'okay'];
+      const randomAffirmation = affirmations[Math.floor(Math.random() * affirmations.length)];
+      toast.success(randomAffirmation, {
+        duration: 4000,
+      });
+    }
   };
 
   const recentMoods = moods.slice(0, 3);
