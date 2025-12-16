@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Send, Wind } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,10 @@ import { useChat } from '@/hooks/useChat';
 
 const Chat = () => {
   const navigate = useNavigate();
-  const { messages, sendMessage, isTyping } = useChat();
+  const [searchParams] = useSearchParams();
+  const moodParam = searchParams.get('mood') as 'sad' | 'stressed' | null;
+  
+  const { messages, sendMessage, isTyping } = useChat(moodParam);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -28,11 +31,17 @@ const Chat = () => {
     }
   };
 
-  const quickReplies = [
-    "I'm feeling stressed",
-    "I need to talk",
-    "Help me relax",
-  ];
+  const quickReplies = moodParam 
+    ? [
+        "I want to talk about it",
+        "I'm not sure why",
+        "Help me feel calmer",
+      ]
+    : [
+        "I'm feeling stressed",
+        "I need to talk",
+        "Help me relax",
+      ];
 
   return (
     <div className="min-h-screen flex flex-col pb-24 md:pt-20">
