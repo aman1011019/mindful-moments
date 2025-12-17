@@ -3,8 +3,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Send, Wind } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { ChatMessage, TypingIndicator } from '@/components/ChatMessage';
 import { useChat } from '@/hooks/useChat';
+
+const moodConfig = {
+  sad: { emoji: '😔', label: 'Feeling Sad', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  stressed: { emoji: '😣', label: 'Feeling Stressed', className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
+};
 
 const Chat = () => {
   const navigate = useNavigate();
@@ -56,9 +62,17 @@ const Chat = () => {
       {/* Header */}
       <header className="sticky top-0 md:top-16 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50 px-4 py-3">
         <div className="container max-w-lg flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold text-foreground">Chat Support</h1>
-            <p className="text-xs text-muted-foreground">A safe space to share</p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="text-lg font-bold text-foreground">Chat Support</h1>
+              <p className="text-xs text-muted-foreground">A safe space to share</p>
+            </div>
+            {moodParam && moodConfig[moodParam] && (
+              <Badge variant="secondary" className={`${moodConfig[moodParam].className} gap-1 text-xs`}>
+                <span>{moodConfig[moodParam].emoji}</span>
+                {moodConfig[moodParam].label}
+              </Badge>
+            )}
           </div>
           <Button
             variant="outline"
