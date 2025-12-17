@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MoodType } from '@/hooks/useMoodStorage';
-
+import { useMoodSounds } from '@/hooks/useMoodSounds';
 const moodEmojis: Record<MoodType, string[]> = {
   happy: ['😊', '🌟', '✨', '💫', '🎉', '💛', '🌈', '☀️'],
   okay: ['😌', '🌿', '💙', '🌊', '☁️', '🍃', '💫', '🌸'],
@@ -26,12 +26,16 @@ interface MoodEmojiReactionProps {
 export const MoodEmojiReaction = ({ mood, onComplete }: MoodEmojiReactionProps) => {
   const [particles, setParticles] = useState<EmojiParticle[]>([]);
   const [mainEmoji, setMainEmoji] = useState<string | null>(null);
+  const { playMoodSound } = useMoodSounds();
 
   useEffect(() => {
     if (!mood) return;
 
     const emojis = moodEmojis[mood];
     setMainEmoji(emojis[0]);
+
+    // Play mood-specific sound
+    playMoodSound(mood);
 
     // Create burst particles
     const newParticles: EmojiParticle[] = Array.from({ length: 12 }, (_, i) => ({
@@ -53,7 +57,7 @@ export const MoodEmojiReaction = ({ mood, onComplete }: MoodEmojiReactionProps) 
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [mood, onComplete]);
+  }, [mood, onComplete, playMoodSound]);
 
   if (!mood) return null;
 
