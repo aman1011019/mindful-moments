@@ -31,11 +31,19 @@ const Chat = () => {
     }
   };
 
-  const quickReplies = moodParam 
+  const quickReplies = moodParam === 'sad'
     ? [
         "I want to talk about it",
-        "I'm not sure why",
-        "Help me feel calmer",
+        "I'm feeling lonely",
+        "I don't know why I'm sad",
+        "Help me feel better",
+      ]
+    : moodParam === 'stressed'
+    ? [
+        "Work is overwhelming",
+        "I can't stop worrying",
+        "Everything feels too much",
+        "Help me calm down",
       ]
     : [
         "I'm feeling stressed",
