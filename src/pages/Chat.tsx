@@ -1,15 +1,33 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Send, Wind } from 'lucide-react';
+import { Send, Wind, Heart, MessageCircle, Sparkles, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ChatMessage, TypingIndicator } from '@/components/ChatMessage';
-import { useChat } from '@/hooks/useChat';
+import { useChat, ConversationStage } from '@/hooks/useChat';
 
 const moodConfig = {
   sad: { emoji: '😔', label: 'Feeling Sad', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
   stressed: { emoji: '😣', label: 'Feeling Stressed', className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
+};
+
+const progressStages = [
+  { key: 'initial', label: 'Opening', icon: Heart },
+  { key: 'listening', label: 'Sharing', icon: MessageCircle },
+  { key: 'suggested_breathing', label: 'Breathing', icon: Sparkles },
+  { key: 'closing', label: 'Closing', icon: CheckCircle },
+] as const;
+
+const getProgressIndex = (stage: ConversationStage): number => {
+  const stageMap: Record<ConversationStage, number> = {
+    initial: 0,
+    listening: 1,
+    suggested_breathing: 2,
+    post_breathing: 2,
+    closing: 3,
+  };
+  return stageMap[stage];
 };
 
 const Chat = () => {
@@ -17,9 +35,11 @@ const Chat = () => {
   const [searchParams] = useSearchParams();
   const moodParam = searchParams.get('mood') as 'sad' | 'stressed' | null;
   
-  const { messages, sendMessage, isTyping } = useChat(moodParam);
+  const { messages, sendMessage, isTyping, conversationState } = useChat(moodParam);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const currentProgressIndex = getProgressIndex(conversationState);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -83,6 +103,49 @@ const Chat = () => {
             <Wind className="w-4 h-4" />
             Calm Mode
           </Button>
+        </div>
+        
+        {/* Progress Indicator */}
+        <div className="container max-w-lg mt-3">
+          <div className="flex items-center justify-between">
+            {progressStages.map((stage, index) => {
+              const Icon = stage.icon;
+              const isCompleted = index < currentProgressIndex;
+              const isCurrent = index === currentProgressIndex;
+              
+              return (
+                <div key={stage.key} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 ${
+                        isCompleted
+                          ? 'bg-primary text-primary-foreground'
+                          : isCurrent
+                          ? 'bg-primary/20 text-primary ring-2 ring-primary/50 ring-offset-2 ring-offset-background'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span
+                      className={`text-[10px] mt-1 transition-colors ${
+                        isCompleted || isCurrent ? 'text-foreground' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {stage.label}
+                    </span>
+                  </div>
+                  {index < progressStages.length - 1 && (
+                    <div
+                      className={`flex-1 h-0.5 mx-2 transition-colors duration-500 ${
+                        isCompleted ? 'bg-primary' : 'bg-muted'
+                      }`}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </header>
 

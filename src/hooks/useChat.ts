@@ -123,10 +123,12 @@ const getRandomResponse = (category: keyof typeof supportiveResponses): string =
   return responses[Math.floor(Math.random() * responses.length)];
 };
 
+export type ConversationStage = 'initial' | 'listening' | 'suggested_breathing' | 'post_breathing' | 'closing';
+
 export const useChat = (initialMood?: MoodContext) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [conversationState, setConversationState] = useState<'initial' | 'listening' | 'suggested_breathing' | 'post_breathing'>('initial');
+  const [conversationState, setConversationState] = useState<ConversationStage>('initial');
   const [messageCount, setMessageCount] = useState(0);
 
   // Initialize with mood-triggered message
@@ -198,6 +200,7 @@ export const useChat = (initialMood?: MoodContext) => {
       }
     } else if (emotion === 'closing') {
       response = getRandomResponse('closing');
+      setConversationState('closing');
     } else if (emotion === 'breathing') {
       response = getRandomResponse('breathingAccepted');
       setConversationState('post_breathing');
@@ -226,5 +229,5 @@ export const useChat = (initialMood?: MoodContext) => {
     setMessages(prev => [...prev, assistantMessage]);
   };
 
-  return { messages, sendMessage, isTyping };
+  return { messages, sendMessage, isTyping, conversationState, messageCount };
 };
