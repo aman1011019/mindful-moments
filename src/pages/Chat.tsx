@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Send, Wind, Heart, MessageCircle, Sparkles, CheckCircle } from 'lucide-react';
+import { Send, Wind, Heart, MessageCircle, Sparkles, CheckCircle, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -116,31 +117,76 @@ const Chat = () => {
               return (
                 <div key={stage.key} className="flex items-center flex-1">
                   <div className="flex flex-col items-center">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 ${
-                        isCompleted
-                          ? 'bg-primary text-primary-foreground'
+                    <motion.div
+                      initial={false}
+                      animate={{
+                        scale: isCurrent ? [1, 1.1, 1] : 1,
+                        backgroundColor: isCompleted
+                          ? 'hsl(var(--primary))'
                           : isCurrent
-                          ? 'bg-primary/20 text-primary ring-2 ring-primary/50 ring-offset-2 ring-offset-background'
-                          : 'bg-muted text-muted-foreground'
+                          ? 'hsl(var(--primary) / 0.2)'
+                          : 'hsl(var(--muted))',
+                      }}
+                      transition={{
+                        scale: {
+                          duration: 0.6,
+                          repeat: isCurrent ? Infinity : 0,
+                          repeatDelay: 2,
+                        },
+                        backgroundColor: { duration: 0.5 },
+                      }}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        isCurrent
+                          ? 'ring-2 ring-primary/50 ring-offset-2 ring-offset-background'
+                          : ''
                       }`}
                     >
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <span
-                      className={`text-[10px] mt-1 transition-colors ${
-                        isCompleted || isCurrent ? 'text-foreground' : 'text-muted-foreground'
-                      }`}
+                      <AnimatePresence mode="wait">
+                        {isCompleted ? (
+                          <motion.div
+                            key="check"
+                            initial={{ scale: 0, rotate: -180 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            exit={{ scale: 0 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                          >
+                            <Check className="w-4 h-4 text-primary-foreground" />
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="icon"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                            className={isCompleted ? 'text-primary-foreground' : isCurrent ? 'text-primary' : 'text-muted-foreground'}
+                          >
+                            <Icon className="w-4 h-4" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                    <motion.span
+                      initial={false}
+                      animate={{
+                        color: isCompleted || isCurrent ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
+                        fontWeight: isCurrent ? 500 : 400,
+                      }}
+                      transition={{ duration: 0.3 }}
+                      className="text-[10px] mt-1"
                     >
                       {stage.label}
-                    </span>
+                    </motion.span>
                   </div>
                   {index < progressStages.length - 1 && (
-                    <div
-                      className={`flex-1 h-0.5 mx-2 transition-colors duration-500 ${
-                        isCompleted ? 'bg-primary' : 'bg-muted'
-                      }`}
-                    />
+                    <div className="flex-1 h-0.5 mx-2 bg-muted overflow-hidden rounded-full">
+                      <motion.div
+                        initial={{ width: '0%' }}
+                        animate={{ width: isCompleted ? '100%' : '0%' }}
+                        transition={{ duration: 0.6, ease: 'easeOut' }}
+                        className="h-full bg-primary"
+                      />
+                    </div>
                   )}
                 </div>
               );
