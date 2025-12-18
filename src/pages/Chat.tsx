@@ -31,16 +31,20 @@ const getProgressIndex = (stage: ConversationStage): number => {
   return stageMap[stage];
 };
 
-// Celebration particles config - arranged in a burst pattern
+// Celebration particles config - burst pattern with larger center emojis
 const celebrationEmojis = ['🎉', '✨', '💫', '🌟', '💖', '🎊', '💜', '⭐'];
 const celebrationParticles = Array.from({ length: 24 }, (_, i) => {
   const row = Math.floor(i / 8);
   const col = i % 8;
+  // Calculate distance from center (col 3.5 is center)
+  const distFromCenter = Math.abs(col - 3.5);
+  const sizeMultiplier = 1.8 - (distFromCenter * 0.25); // Larger in center
   return {
     id: i,
     emoji: celebrationEmojis[col],
-    x: 10 + col * 11, // Even horizontal distribution
-    delay: row * 0.15 + (col % 2) * 0.1, // Staggered timing for wave effect
+    x: 5 + col * 12, // Better horizontal distribution
+    delay: row * 0.12 + (col % 2) * 0.08,
+    size: sizeMultiplier,
   };
 });
 
@@ -153,7 +157,7 @@ const Chat = () => {
       ];
 
   return (
-    <div className="min-h-screen flex flex-col pb-24 md:pt-20 relative">
+    <div className="h-screen flex flex-col relative overflow-hidden">
       {/* Celebration Animation */}
       <AnimatePresence>
         {showCelebration && (
@@ -165,12 +169,12 @@ const Chat = () => {
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 pointer-events-none"
             >
-              {/* Falling particles */}
+              {/* Falling particles with varying sizes */}
               {celebrationParticles.map((particle) => (
                 <motion.div
                   key={particle.id}
                   initial={{ 
-                    y: -50, 
+                    y: -60, 
                     x: `${particle.x}vw`,
                     opacity: 0,
                     scale: 0,
@@ -179,15 +183,16 @@ const Chat = () => {
                   animate={{ 
                     y: '100vh',
                     opacity: [0, 1, 1, 0],
-                    scale: [0, 1.5, 1, 0.5],
+                    scale: [0, particle.size * 1.2, particle.size, particle.size * 0.5],
                     rotate: [0, 180, 360],
                   }}
                   transition={{ 
-                    duration: 2.5,
+                    duration: 2.8,
                     delay: particle.delay,
                     ease: 'easeOut',
                   }}
-                  className="absolute text-2xl md:text-3xl"
+                  className="absolute"
+                  style={{ fontSize: `${particle.size * 2}rem` }}
                 >
                   {particle.emoji}
                 </motion.div>
@@ -215,18 +220,18 @@ const Chat = () => {
                     repeat: 2,
                     repeatType: 'reverse',
                   }}
-                  className="bg-background/95 backdrop-blur-md border border-primary/30 rounded-2xl px-8 py-6 shadow-lg text-center"
+                  className="bg-background/95 backdrop-blur-md border border-primary/30 rounded-3xl px-10 py-8 shadow-2xl text-center"
                 >
                   <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.4, type: 'spring' }}
-                    className="text-4xl mb-2"
+                    initial={{ scale: 0, rotate: -20 }}
+                    animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                    transition={{ delay: 0.4, duration: 0.8, type: 'spring' }}
+                    className="text-6xl md:text-7xl mb-3"
                   >
                     🎉
                   </motion.div>
-                  <h3 className="text-lg font-semibold text-foreground">Journey Complete!</h3>
-                  <p className="text-sm text-muted-foreground mt-1">You did amazing today</p>
+                  <h3 className="text-xl font-bold text-foreground">Journey Complete!</h3>
+                  <p className="text-sm text-muted-foreground mt-2">You did amazing today 💖</p>
                 </motion.div>
               </motion.div>
             </motion.div>
@@ -234,7 +239,7 @@ const Chat = () => {
         )}
       </AnimatePresence>
       {/* Header */}
-      <header className="sticky top-0 md:top-16 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50 px-4 py-3">
+      <header className="shrink-0 bg-background/80 backdrop-blur-xl border-b border-border/50 px-4 py-3">
         <div className="container max-w-lg flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div>
@@ -349,8 +354,8 @@ const Chat = () => {
       </header>
 
       {/* Messages */}
-      <div className="flex-1 container max-w-lg px-4 py-4 overflow-y-auto">
-        <div className="space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="container max-w-lg px-4 py-4 space-y-4">
           {messages.map(message => (
             <ChatMessage key={message.id} message={message} />
           ))}
@@ -361,7 +366,7 @@ const Chat = () => {
 
       {/* Quick replies */}
       {messages.length < 3 && (
-        <div className="container max-w-lg px-4 pb-2">
+        <div className="shrink-0 container max-w-lg px-4 pb-2">
           <div className="flex gap-2 overflow-x-auto pb-2">
             {quickReplies.map(reply => (
               <Button
@@ -379,8 +384,8 @@ const Chat = () => {
       )}
 
       {/* Input - Modern chat app style */}
-      <div className="sticky bottom-24 md:bottom-4 mx-4 md:mx-auto max-w-lg">
-        <form onSubmit={handleSubmit}>
+      <div className="shrink-0 px-4 pb-4 pt-2">
+        <form onSubmit={handleSubmit} className="max-w-lg mx-auto">
           <div className="flex gap-3 bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl p-2 shadow-lg">
             <Input
               value={input}
