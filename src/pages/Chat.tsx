@@ -31,6 +31,14 @@ const getProgressIndex = (stage: ConversationStage): number => {
   return stageMap[stage];
 };
 
+// Celebration particles config
+const celebrationParticles = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  emoji: ['🎉', '✨', '💫', '🌟', '💖', '🎊'][i % 6],
+  x: Math.random() * 100,
+  delay: Math.random() * 0.5,
+}));
+
 const Chat = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -39,6 +47,8 @@ const Chat = () => {
   const { messages, sendMessage, isTyping, conversationState } = useChat(moodParam);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [hasShownCelebration, setHasShownCelebration] = useState(false);
 
   const currentProgressIndex = getProgressIndex(conversationState);
 
@@ -49,6 +59,21 @@ const Chat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+
+  // Trigger celebration when reaching closing stage
+  useEffect(() => {
+    if (conversationState === 'closing' && !hasShownCelebration) {
+      setShowCelebration(true);
+      setHasShownCelebration(true);
+      
+      // Auto-hide celebration after animation
+      const timer = setTimeout(() => {
+        setShowCelebration(false);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [conversationState, hasShownCelebration]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +104,86 @@ const Chat = () => {
       ];
 
   return (
-    <div className="min-h-screen flex flex-col pb-24 md:pt-20">
+    <div className="min-h-screen flex flex-col pb-24 md:pt-20 relative">
+      {/* Celebration Animation */}
+      <AnimatePresence>
+        {showCelebration && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 pointer-events-none"
+            >
+              {/* Falling particles */}
+              {celebrationParticles.map((particle) => (
+                <motion.div
+                  key={particle.id}
+                  initial={{ 
+                    y: -50, 
+                    x: `${particle.x}vw`,
+                    opacity: 0,
+                    scale: 0,
+                    rotate: 0,
+                  }}
+                  animate={{ 
+                    y: '100vh',
+                    opacity: [0, 1, 1, 0],
+                    scale: [0, 1.5, 1, 0.5],
+                    rotate: [0, 180, 360],
+                  }}
+                  transition={{ 
+                    duration: 2.5,
+                    delay: particle.delay,
+                    ease: 'easeOut',
+                  }}
+                  className="absolute text-2xl md:text-3xl"
+                >
+                  {particle.emoji}
+                </motion.div>
+              ))}
+              
+              {/* Center celebration message */}
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ 
+                  type: 'spring',
+                  stiffness: 200,
+                  damping: 15,
+                  delay: 0.2,
+                }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.05, 1],
+                  }}
+                  transition={{ 
+                    duration: 0.8,
+                    repeat: 2,
+                    repeatType: 'reverse',
+                  }}
+                  className="bg-background/95 backdrop-blur-md border border-primary/30 rounded-2xl px-8 py-6 shadow-lg text-center"
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.4, type: 'spring' }}
+                    className="text-4xl mb-2"
+                  >
+                    🎉
+                  </motion.div>
+                  <h3 className="text-lg font-semibold text-foreground">Journey Complete!</h3>
+                  <p className="text-sm text-muted-foreground mt-1">You did amazing today</p>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
       {/* Header */}
       <header className="sticky top-0 md:top-16 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50 px-4 py-3">
         <div className="container max-w-lg flex items-center justify-between">
