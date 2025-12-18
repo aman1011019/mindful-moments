@@ -31,13 +31,61 @@ const getProgressIndex = (stage: ConversationStage): number => {
   return stageMap[stage];
 };
 
-// Celebration particles config
-const celebrationParticles = Array.from({ length: 20 }, (_, i) => ({
-  id: i,
-  emoji: ['🎉', '✨', '💫', '🌟', '💖', '🎊'][i % 6],
-  x: Math.random() * 100,
-  delay: Math.random() * 0.5,
-}));
+// Celebration particles config - arranged in a burst pattern
+const celebrationEmojis = ['🎉', '✨', '💫', '🌟', '💖', '🎊', '💜', '⭐'];
+const celebrationParticles = Array.from({ length: 24 }, (_, i) => {
+  const row = Math.floor(i / 8);
+  const col = i % 8;
+  return {
+    id: i,
+    emoji: celebrationEmojis[col],
+    x: 10 + col * 11, // Even horizontal distribution
+    delay: row * 0.15 + (col % 2) * 0.1, // Staggered timing for wave effect
+  };
+});
+
+// Celebration sound using Web Audio API
+const playCelebrationSound = () => {
+  try {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Play a triumphant chord progression
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    notes.forEach((freq, i) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.1 + i * 0.08);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
+      
+      oscillator.start(audioContext.currentTime + i * 0.08);
+      oscillator.stop(audioContext.currentTime + 1.8);
+    });
+    
+    // Add a soft shimmer effect
+    setTimeout(() => {
+      const shimmer = audioContext.createOscillator();
+      const shimmerGain = audioContext.createGain();
+      shimmer.connect(shimmerGain);
+      shimmerGain.connect(audioContext.destination);
+      shimmer.frequency.setValueAtTime(1318.51, audioContext.currentTime); // E6
+      shimmer.type = 'sine';
+      shimmerGain.gain.setValueAtTime(0.08, audioContext.currentTime);
+      shimmerGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+      shimmer.start();
+      shimmer.stop(audioContext.currentTime + 0.8);
+    }, 400);
+  } catch (e) {
+    console.log('Audio not supported');
+  }
+};
 
 const Chat = () => {
   const navigate = useNavigate();
@@ -65,11 +113,12 @@ const Chat = () => {
     if (conversationState === 'closing' && !hasShownCelebration) {
       setShowCelebration(true);
       setHasShownCelebration(true);
+      playCelebrationSound();
       
       // Auto-hide celebration after animation
       const timer = setTimeout(() => {
         setShowCelebration(false);
-      }, 3000);
+      }, 3500);
       
       return () => clearTimeout(timer);
     }
@@ -329,15 +378,15 @@ const Chat = () => {
         </div>
       )}
 
-      {/* Input */}
-      <div className="sticky bottom-20 md:bottom-0 bg-background/80 backdrop-blur-xl border-t border-border/50 px-4 py-3">
-        <form onSubmit={handleSubmit} className="container max-w-lg">
-          <div className="flex gap-2">
+      {/* Input - Modern chat app style */}
+      <div className="sticky bottom-24 md:bottom-4 mx-4 md:mx-auto max-w-lg">
+        <form onSubmit={handleSubmit}>
+          <div className="flex gap-3 bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl p-2 shadow-lg">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Share how you're feeling..."
-              className="flex-1 rounded-xl border-border/50 bg-card"
+              className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-base placeholder:text-muted-foreground/60"
               disabled={isTyping}
             />
             <Button
@@ -345,6 +394,7 @@ const Chat = () => {
               size="icon"
               variant="calm"
               disabled={!input.trim() || isTyping}
+              className="rounded-xl h-10 w-10 shrink-0"
             >
               <Send className="w-4 h-4" />
             </Button>

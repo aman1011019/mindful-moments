@@ -76,6 +76,18 @@ const supportiveResponses = {
     "That's really insightful. Would you like to explore those feelings more?",
     "I'm here to listen. What would help you feel better right now?",
   ],
+  angry: [
+    "I can hear the frustration in your words. Those feelings are completely valid.",
+    "It makes sense that you'd feel angry about that. Want to tell me more?",
+    "That sounds really frustrating. It's okay to feel this way.",
+    "Your anger is telling you something important. I'm here to listen.",
+  ],
+  confused: [
+    "It's okay to feel uncertain. Sometimes we need time to sort through our feelings.",
+    "Mixed feelings can be overwhelming. Let's take it one step at a time.",
+    "Not knowing how you feel is completely normal. What's the strongest feeling right now?",
+    "It's okay to sit with the uncertainty. I'm here with you.",
+  ],
 };
 
 const detectEmotion = (message: string): string => {
@@ -83,35 +95,74 @@ const detectEmotion = (message: string): string => {
   
   // Detect severe distress patterns for grounding response
   if (lower.includes('can\'t take') || lower.includes('too much') || lower.includes('overwhelm') || 
-      lower.includes('breaking') || lower.includes('falling apart') || lower.includes('panic')) {
+      lower.includes('breaking') || lower.includes('falling apart') || lower.includes('panic') ||
+      lower.includes('can\'t breathe') || lower.includes('losing it') || lower.includes('can\'t cope') ||
+      lower.includes('end it') || lower.includes('give up') || lower.includes('hopeless')) {
     return 'severe_stress';
   }
   
+  // Happy emotions - expanded detection
   if (lower.includes('happy') || lower.includes('great') || lower.includes('amazing') || 
-      lower.includes('good') || lower.includes('wonderful') || lower.includes('excited')) {
+      lower.includes('good') || lower.includes('wonderful') || lower.includes('excited') ||
+      lower.includes('joy') || lower.includes('love it') || lower.includes('fantastic') ||
+      lower.includes('blessed') || lower.includes('grateful') || lower.includes('thankful') ||
+      lower.includes('awesome') || lower.includes('perfect') || lower.includes('proud')) {
     return 'happy';
   }
+  
+  // Sad emotions - expanded detection
   if (lower.includes('sad') || lower.includes('down') || lower.includes('depressed') || 
-      lower.includes('lonely') || lower.includes('hurt') || lower.includes('crying')) {
+      lower.includes('lonely') || lower.includes('hurt') || lower.includes('crying') ||
+      lower.includes('miss') || lower.includes('lost') || lower.includes('empty') ||
+      lower.includes('heartbroken') || lower.includes('grief') || lower.includes('sorrow') ||
+      lower.includes('tears') || lower.includes('upset') || lower.includes('miserable') ||
+      lower.includes('disappointed') || lower.includes('let down') || lower.includes('alone')) {
     return 'sad';
   }
+  
+  // Stressed/anxious emotions - expanded detection
   if (lower.includes('stress') || lower.includes('anxious') || lower.includes('anxiety') ||
-      lower.includes('worry') || lower.includes('nervous') || lower.includes('pressure')) {
+      lower.includes('worry') || lower.includes('nervous') || lower.includes('pressure') ||
+      lower.includes('tense') || lower.includes('scared') || lower.includes('afraid') ||
+      lower.includes('fear') || lower.includes('restless') || lower.includes('can\'t sleep') ||
+      lower.includes('insomnia') || lower.includes('racing thoughts') || lower.includes('uneasy') ||
+      lower.includes('on edge') || lower.includes('exhausted') || lower.includes('burned out') ||
+      lower.includes('burnout') || lower.includes('tired') || lower.includes('drained')) {
     return 'stressed';
   }
-  if (lower.includes('yes') || lower.includes('sure') || lower.includes('okay') || lower.includes('please')) {
+  
+  // Angry emotions - new category
+  if (lower.includes('angry') || lower.includes('mad') || lower.includes('furious') ||
+      lower.includes('frustrated') || lower.includes('annoyed') || lower.includes('irritated') ||
+      lower.includes('hate') || lower.includes('rage') || lower.includes('unfair')) {
+    return 'angry';
+  }
+  
+  // Confused emotions - new category
+  if (lower.includes('confused') || lower.includes('don\'t know') || lower.includes('lost') ||
+      lower.includes('uncertain') || lower.includes('unsure') || lower.includes('stuck') ||
+      lower.includes('mixed feelings') || lower.includes('torn')) {
+    return 'confused';
+  }
+  
+  if (lower.includes('yes') || lower.includes('sure') || lower.includes('okay') || lower.includes('please') ||
+      lower.includes('let\'s try') || lower.includes('i\'d like') || lower.includes('sounds good')) {
     return 'acceptance';
   }
-  if (lower.includes('no') || lower.includes('not now') || lower.includes('maybe later')) {
+  if (lower.includes('no') || lower.includes('not now') || lower.includes('maybe later') ||
+      lower.includes('not ready') || lower.includes('don\'t want')) {
     return 'decline';
   }
-  if (lower.includes('breath') || lower.includes('calm') || lower.includes('relax') || lower.includes('meditation')) {
+  if (lower.includes('breath') || lower.includes('calm') || lower.includes('relax') || lower.includes('meditation') ||
+      lower.includes('peaceful') || lower.includes('quiet')) {
     return 'breathing';
   }
-  if (lower.includes('bye') || lower.includes('thank') || lower.includes('better') || lower.includes('helped')) {
+  if (lower.includes('bye') || lower.includes('thank') || lower.includes('better') || lower.includes('helped') ||
+      lower.includes('goodbye') || lower.includes('see you') || lower.includes('take care')) {
     return 'closing';
   }
-  if (lower.includes('hi') || lower.includes('hello') || lower.includes('hey')) {
+  if (lower.includes('hi') || lower.includes('hello') || lower.includes('hey') || 
+      lower.includes('good morning') || lower.includes('good evening')) {
     return 'greeting';
   }
   
@@ -188,8 +239,8 @@ export const useChat = (initialMood?: MoodContext) => {
       // Grounding response for severe distress
       response = "I hear you, and I want you to know you're not alone in this moment.\n\nLet's take this one breath at a time. You're safe right here, right now.\n\nWould you like to try a gentle breathing exercise to help ground yourself?";
       setConversationState('suggested_breathing');
-    } else if (emotion === 'sad' || emotion === 'stressed') {
-      response = getRandomResponse(emotion);
+    } else if (emotion === 'sad' || emotion === 'stressed' || emotion === 'angry' || emotion === 'confused') {
+      response = getRandomResponse(emotion as keyof typeof supportiveResponses);
       
       // Suggest breathing after a few exchanges or if they seem overwhelmed
       if (messageCount >= 2 && conversationState !== 'post_breathing') {
